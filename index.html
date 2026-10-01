@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Missed-Call Audit — $100k Automation</title>
+<meta name="description" content="A free 10-day audit of what your business is losing when a call goes unanswered. Fixed scope, no retainer, no obligation.">
+<meta name="robots" content="index,follow">
+<!--
+  Single-purpose lead magnet. One action: submit an email for the free audit.
+  The form posts to the capture origin. Same-origin by default so the page
+  works the moment it is served by capture-server.cjs. When the page is
+  published to a static host instead, set data-capture-endpoint on <body> to
+  the public capture origin (see README.md §Live ingress).
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 40rem; margin: 0 auto; padding: 3rem 1.25rem 4rem;
+    line-height: 1.6; color: #14161a; background: #fff;
+  }
+  .eyebrow { text-transform: uppercase; letter-spacing: .09em; font-size: .75rem; font-weight: 700; color: #5b6472; margin: 0 0 .5rem; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1rem; letter-spacing: -.02em; }
+  h2 { font-size: 1.05rem; margin: 2rem 0 .75rem; }
+  p { margin: 0 0 1rem; }
+  .lede { font-size: 1.05rem; color: #333a44; }
+  .card { border: 1px solid #d9dee5; border-radius: 10px; padding: 1.5rem; margin: 1.5rem 0; background: #fbfcfd; }
+  form { display: grid; gap: .9rem; margin: 1.5rem 0 0; }
+  label { display: grid; gap: .3rem; font-size: .875rem; font-weight: 600; color: #333a44; }
+  input[type=text], input[type=email], textarea {
+    font: inherit; padding: .65rem .75rem; border: 1px solid #b9c1cc; border-radius: 7px; background: #fff;
+  }
+  input:focus, textarea:focus { outline: 2px solid #1a4fd6; outline-offset: 1px; border-color: #1a4fd6; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+  .consent { display: grid; grid-template-columns: auto 1fr; gap: .6rem; align-items: start; font-weight: 400; font-size: .85rem; color: #333a44; }
+  .consent input { margin-top: .25rem; width: 1rem; height: 1rem; }
+  button {
+    font: inherit; font-weight: 600; padding: .8rem 1.2rem; border: 0; border-radius: 7px;
+    background: #14161a; color: #fff; cursor: pointer;
+  }
+  button:hover { background: #000; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  ul { margin: 0 0 1rem; padding-left: 1.2rem; }
+  li { margin-bottom: .4rem; }
+  .msg { padding: .85rem 1rem; border-radius: 7px; margin-top: 1rem; display: none; }
+  .msg.ok { display: block; background: #e9f7ee; border: 1px solid #a8dcbb; color: #0a5c2c; }
+  .msg.err { display: block; background: #fdecec; border: 1px solid #f0b0b0; color: #8a1414; }
+  footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e4e8ee; font-size: .8rem; color: #6b7480; }
+  footer a { color: #333a44; }
+</style>
+</head>
+<body data-capture-endpoint="https://social-gifts-tickle.loca.lt/api/capture">
+
+<p class="eyebrow">Free audit · Fixed scope · No retainer</p>
+<h1>How many calls did you miss last month?</h1>
+<p class="lede">We run a free audit of your inbound call handling and tell you, in writing, exactly what your business is losing to unanswered calls — with the cheapest fix first. Ten days, fixed scope. No retainer, no obligation.</p>
+
+<div class="card">
+  <h2>What you get</h2>
+  <ul>
+    <li>A written count of missed, and the revenue behind them, from your own numbers.</li>
+    <li>The one fix that recovers the most, priced as a fixed scope — not a monthly bill.</li>
+    <li>A reply from a real inbox, usually within one business day.</li>
+  </ul>
+</div>
+
+<h2>Get the audit</h2>
+<p style="font-size:.9rem;color:#4a525e;">One field is enough. Add the rest if you have it.</p>
+
+<form id="f" novalidate>
+  <label>Work email
+    <input type="email" name="email" id="email" required autocomplete="email" placeholder="you@yourcompany.com">
+  </label>
+  <div class="row">
+    <label>Name <span style="font-weight:400;color:#6b7480;">(optional)</span>
+      <input type="text" name="name" autocomplete="name">
+    </label>
+    <label>Business <span style="font-weight:400;color:#6b7480;">(optional)</span>
+      <input type="text" name="company" autocomplete="organization">
+    </label>
+  </div>
+  <label>What are you losing to missed calls? <span style="font-weight:400;color:#6b7480;">(optional)</span>
+    <textarea name="note" rows="3" placeholder="e.g. 40+ calls a week after hours, no one on the line."></textarea>
+  </label>
+  <input type="hidden" name="offer" value="free-audit">
+  <label class="consent">
+    <input type="checkbox" name="consent" id="consent" required>
+    <span>Yes, email me about this audit and related automation work. I can unsubscribe at any time.</span>
+  </label>
+  <button type="submit" id="submit">Send me the audit</button>
+</form>
+
+<div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+<footer>
+  <p>Email: <a href="mailto:stop@100k.work">stop@100k.work</a> — a monitored inbox. Reply “STOP” at any time and you are removed from every list, permanently.</p>
+  <p>You submitted the address yourself, so you can ask us to delete it at any time and we will. No address you give here is ever added to a cold campaign list.</p>
+</footer>
+
+<script>
+(function () {
+  var form = document.getElementById('f');
+  var msg = document.getElementById('msg');
+  var button = document.getElementById('submit');
+
+  // Static hosts cannot infer where the capture origin lives, so the endpoint
+  // is declared on <body data-capture-endpoint> and defaults to same-origin.
+  var configured = document.body.getAttribute('data-capture-endpoint');
+  var endpoint = (configured && configured.trim()) || '/api/capture';
+
+  function utm() {
+    var q = new URLSearchParams(window.location.search);
+    return {
+      utmSource: q.get('utm_source') || null,
+      utmCampaign: q.get('utm_campaign') || null,
+      utmMedium: q.get('utm_medium') || null,
+    };
+  }
+
+  function say(text, kind) {
+    msg.textContent = text;
+    msg.className = 'msg ' + kind;
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    msg.className = 'msg';
+
+    var email = form.email.value.trim();
+    if (!email) { say('Enter an email address so we can send the audit.', 'err'); form.email.focus(); return; }
+    if (!form.consent.checked) { say('Tick the consent box so we may email you.', 'err'); form.consent.focus(); return; }
+
+    button.disabled = true;
+    button.textContent = 'Sending…';
+
+    var u = utm();
+    var payload = {
+      email: email,
+      name: form.name.value.trim() || null,
+      company: form.company.value.trim() || null,
+      note: form.note.value.trim() || null,
+      offer: form.offer.value,
+      consentGranted: true,
+      source: {
+        channel: 'landing_page',
+        referrer: document.referrer || null,
+        page: window.location.href,
+        utmSource: u.utmSource,
+        utmCampaign: u.utmCampaign,
+        utmMedium: u.utmMedium,
+      },
+    };
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
+      .then(function (out) {
+        if (out.body && out.body.ok) {
+          say(out.body.message || 'Received.', 'ok');
+          form.reset();
+        } else {
+          say((out.body && out.body.message) || 'We could not accept that address.', 'err');
+        }
+      })
+      .catch(function () {
+        say('The audit desk is unreachable right now. Email ' + 'stop@100k.work' + ' and we will take it from there.', 'err');
+      })
+      .then(function () {
+        button.disabled = false;
+        button.textContent = 'Send me the audit';
+      });
+  });
+})();
+</script>
+</body>
+</html>
